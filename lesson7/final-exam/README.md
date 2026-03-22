@@ -146,7 +146,7 @@ kubectl top pods -n prod
 
 # 用壓測 Pod 打 API
 kubectl run load-test --image=busybox:1.36 -n prod --rm -it --restart=Never -- \
-  sh -c "while true; do wget -qO- http://api-svc:8080 > /dev/null 2>&1; done"
+  sh -c "while true; do wget -qO- http://api-svc:80 > /dev/null 2>&1; done"
 
 # 另開一個終端機觀察 HPA
 kubectl get hpa -n prod -w

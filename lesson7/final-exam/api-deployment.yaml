@@ -24,7 +24,7 @@ spec:
         - name: api
           image: nginx:1.27             # 用 nginx 模擬 API（實際專案換成你的 API image）
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           env:
             - name: DB_HOST
               valueFrom:
@@ -51,21 +51,21 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 8080
+              port: 80
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
-              port: 8080
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 2
           startupProbe:
             httpGet:
               path: /
-              port: 8080
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 10        # 啟動最多等 50 秒

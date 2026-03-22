@@ -41,7 +41,7 @@ spec:
               role: frontend
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
     # 也允許 Ingress Controller 的流量
     - from:
         - namespaceSelector:
@@ -49,7 +49,7 @@ spec:
               kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
 ---
 # 規則 3：前端只接受 Ingress Controller 的連線
 apiVersion: networking.k8s.io/v1

@@ -26,4 +26,4 @@ spec:
               service:
                 name: api-svc
                 port:
-                  number: 8080
+                  number: 80

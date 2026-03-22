@@ -104,6 +104,9 @@ kubectl apply -f deployment-resources.yaml
 # 只用 api-resources-demo，不要 oom-demo
 kubectl delete deployment oom-demo 2>/dev/null
 
+# 建立 Service（壓測需要透過 Service 存取）
+kubectl expose deployment api-resources-demo --port=80 --target-port=80 --name=api-resources-demo
+
 # 部署 HPA
 kubectl apply -f hpa.yaml
 
@@ -123,6 +126,7 @@ kubectl get hpa -w
 
 # 清理
 kubectl delete hpa api-hpa
+kubectl delete svc api-resources-demo
 kubectl delete deployment api-resources-demo
 ```
 
@@ -226,11 +230,11 @@ kubectl get cronjobs
 # SCHEDULE 欄位顯示 */1 * * * *
 
 # 等一兩分鐘，查看 CronJob 產生的 Job
-kubectl get jobs -l job-name
-# 每分鐘會多一個 Job
+kubectl get jobs
+# 每分鐘會多一個 timestamp-printer-xxxxxx 的 Job
 
-# 看最近一次的日誌
-kubectl logs $(kubectl get pods --sort-by=.metadata.creationTimestamp -l job-name -o jsonpath='{.items[-1].metadata.name}')
+# 看最近一次的日誌（用 --sort-by 找最新的 Pod）
+kubectl logs $(kubectl get pods --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
 
 # 清理
 kubectl delete job one-time-job

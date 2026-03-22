@@ -13,8 +13,8 @@ spec:
     app: api
     role: api
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 80
+      targetPort: 80
 ---
 # 前端的 ClusterIP Service（給 Ingress 用）
 apiVersion: v1

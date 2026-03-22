@@ -1,0 +1,53 @@
+# frontend-deployment.yaml
+# 總複習實戰 Step 6：部署前端（Deployment）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deploy
+  namespace: prod
+  labels:
+    app: frontend
+    role: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      role: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        role: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "150m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: frontend-nginx-config

@@ -1,0 +1,86 @@
+# networkpolicy-db.yaml
+# NetworkPolicy：DB 只允許 API Pod 連線
+# 第七堂 Lab：NetworkPolicy
+---
+# 先建一個假的 DB Pod（用 nginx 模擬，只是為了示範 NetworkPolicy）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-db
+  labels:
+    app: fake-db
+    role: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fake-db
+      role: database
+  template:
+    metadata:
+      labels:
+        app: fake-db
+        role: database
+    spec:
+      containers:
+        - name: db
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+---
+# DB 的 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-db-svc
+spec:
+  selector:
+    app: fake-db
+    role: database
+  ports:
+    - port: 3306
+      targetPort: 80
+---
+# API Pod（有 role=api 標籤，可以連 DB）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-api
+  labels:
+    app: fake-api
+    role: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fake-api
+      role: api
+  template:
+    metadata:
+      labels:
+        app: fake-api
+        role: api
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+---
+# NetworkPolicy：只允許 role=api 的 Pod 連到 role=database 的 Pod
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-allow-api-only
+spec:
+  podSelector:
+    matchLabels:
+      role: database                    # 這條規則套用在 DB Pod 上
+  policyTypes:
+    - Ingress                           # 管進來的流量
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: api                 # 只允許 role=api 的 Pod 連進來
+      ports:
+        - protocol: TCP
+          port: 80                      # 允許連 port 80

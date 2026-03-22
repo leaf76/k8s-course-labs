@@ -1,0 +1,32 @@
+# services.yaml
+# 總複習實戰 Step 7：建立 Service
+---
+# API 的 ClusterIP Service（只在叢集內部存取）
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-svc
+  namespace: prod
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+    role: api
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# 前端的 ClusterIP Service（給 Ingress 用）
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: prod
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+    role: frontend
+  ports:
+    - port: 80
+      targetPort: 80

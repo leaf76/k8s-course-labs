@@ -1,0 +1,94 @@
+# Lab 6-6: PersistentVolume + PersistentVolumeClaim（靜態佈建）
+# 功能：讓 Pod 的資料在重啟後還在
+#
+# Docker 對照：
+#   docker volume create mydata
+#   docker run -v mydata:/var/lib/mysql mysql
+#   ↓ K8s 等價 ↓
+#   PV = docker volume create（管理員建立儲存空間）
+#   PVC = -v mydata:/path（使用者申請使用儲存空間）
+#
+# 流程：
+#   1. 管理員建立 PV（「我有 1GB 的儲存空間」）
+#   2. 使用者建立 PVC（「我需要 1GB 的儲存空間」）
+#   3. K8s 自動配對（Binding）
+#   4. Pod 使用 PVC
+
+---
+# --- Step 1: PersistentVolume（管理員建立）---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 1Gi                   # 這個 PV 有 1GB
+  accessModes:
+    - ReadWriteOnce                # RWO：同時只能被一個 Node 掛載
+    # 其他選項：
+    # - ReadOnlyMany   (ROX)：多個 Node 可以唯讀掛載
+    # - ReadWriteMany  (RWX)：多個 Node 可以讀寫掛載（需要 NFS 等支援）
+  persistentVolumeReclaimPolicy: Retain   # PVC 刪掉後，PV 的資料保留
+    # 其他選項：
+    # Delete — PVC 刪掉後，PV 也跟著刪（雲端常用）
+    # Recycle — 清空資料後重新使用（已棄用）
+  storageClassName: manual         # 自訂名稱，PVC 要用一樣的才能配對
+  hostPath:                        # 用 Node 本機的目錄（僅適合學習/開發）
+    path: /tmp/k8s-pv-data
+    type: DirectoryOrCreate        # 目錄不存在就自動建立
+
+---
+# --- Step 2: PersistentVolumeClaim（使用者申請）---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce                # 要跟 PV 的 accessModes 相容
+  resources:
+    requests:
+      storage: 1Gi                 # 我需要 1GB（不能超過 PV 的 capacity）
+  storageClassName: manual         # 要跟 PV 的 storageClassName 一致
+
+---
+# --- Step 3: Pod 使用 PVC ---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-with-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-with-storage
+  template:
+    metadata:
+      labels:
+        app: app-with-storage
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - |
+              # 寫入資料
+              echo "寫入時間: $(date)" >> /data/test.txt
+              echo "Pod 名稱: $(hostname)" >> /data/test.txt
+              echo "--- 目前檔案內容 ---"
+              cat /data/test.txt
+              echo "--- 等待中（你可以刪掉這個 Pod，資料不會消失）---"
+              sleep 3600
+          volumeMounts:
+            - name: my-storage
+              mountPath: /data       # 容器裡的掛載路徑
+      volumes:
+        - name: my-storage
+          persistentVolumeClaim:
+            claimName: local-pvc     # 指向上面的 PVC

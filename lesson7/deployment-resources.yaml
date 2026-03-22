@@ -1,0 +1,61 @@
+# deployment-resources.yaml
+# 帶資源限制的 Deployment
+# 第七堂 Lab：Resource 管理
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-resources-demo
+  labels:
+    app: api-resources-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-resources-demo
+  template:
+    metadata:
+      labels:
+        app: api-resources-demo
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            # requests：保證給你的最低資源（Scheduler 用這個排程）
+            requests:
+              cpu: "100m"               # 100 毫核 = 0.1 核
+              memory: "64Mi"            # 64 MiB
+            # limits：最多能用的上限（超過會被限制/殺掉）
+            limits:
+              cpu: "200m"               # 200 毫核 = 0.2 核
+              memory: "128Mi"           # 超過 128Mi 會 OOMKilled
+---
+# 故意搞壞：記憶體限制太小的 Deployment（用來示範 OOMKilled）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oom-demo
+  labels:
+    app: oom-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oom-demo
+  template:
+    metadata:
+      labels:
+        app: oom-demo
+    spec:
+      containers:
+        - name: stress
+          image: polinux/stress
+          command: ["stress"]
+          args: ["--vm", "1", "--vm-bytes", "256M", "--vm-hang", "1"]
+          resources:
+            requests:
+              memory: "64Mi"
+            limits:
+              memory: "128Mi"           # 只給 128Mi，但程式要用 256Mi → OOMKilled

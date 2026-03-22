@@ -1,0 +1,43 @@
+# cronjob.yaml
+# CronJob 範例：每分鐘印一次時間戳
+# 第七堂 Lab：Job/CronJob
+---
+# 先看一個一次性 Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: one-time-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: worker
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - echo "Job started at $(date)" && echo "Processing..." && sleep 5 && echo "Job completed at $(date)"
+      restartPolicy: Never              # Job 用 Never 或 OnFailure
+  backoffLimit: 3                       # 失敗最多重試 3 次
+---
+# CronJob：每分鐘印一次時間戳
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: timestamp-printer
+spec:
+  schedule: "*/1 * * * *"              # 每分鐘跑一次（cron 語法）
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: printer
+              image: busybox:1.36
+              command:
+                - sh
+                - -c
+                - echo "Current timestamp is $(date '+%Y-%m-%d %H:%M:%S')"
+          restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3         # 保留最近 3 個成功的 Job
+  failedJobsHistoryLimit: 1             # 保留最近 1 個失敗的 Job

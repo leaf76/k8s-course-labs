@@ -1,0 +1,55 @@
+# Lab 6-3: ConfigMap（從 literal 建立 + 環境變數注入）
+# 功能：把應用的設定抽出來，不要寫死在 Image 裡
+#
+# Docker 對照：
+#   docker run -e APP_ENV=production -e LOG_LEVEL=info myapp
+#   ↓ K8s 等價 ↓
+#   用 ConfigMap 集中管理，再注入到 Pod
+
+---
+# --- ConfigMap：集中存放設定 ---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  # key: value 格式，跟環境變數一樣
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  API_URL: "http://api-svc:3000"
+  MAX_CONNECTIONS: "100"
+
+---
+# --- Deployment：把 ConfigMap 注入為環境變數 ---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-with-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-with-config
+  template:
+    metadata:
+      labels:
+        app: app-with-config
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c", "env | sort && sleep 3600"]
+          # 方法 1：逐一指定要注入哪些 key
+          env:
+            - name: APP_ENV                  # Pod 裡的環境變數名稱
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config           # 哪個 ConfigMap
+                  key: APP_ENV               # ConfigMap 裡的哪個 key
+
+          # 方法 2：一次全部注入（更方便）
+          envFrom:
+            - configMapRef:
+                name: app-config             # 把 app-config 的所有 key 都變成環境變數

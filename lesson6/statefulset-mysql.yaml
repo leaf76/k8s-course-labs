@@ -1,0 +1,94 @@
+# Lab 6-7: StatefulSet + Headless Service（MySQL）
+# 功能：有狀態應用的部署方式，每個 Pod 有穩定的身份和獨立的儲存
+#
+# Docker 對照：
+#   docker run --name mysql-0 -v mysql0-data:/var/lib/mysql mysql
+#   docker run --name mysql-1 -v mysql1-data:/var/lib/mysql mysql
+#   ↓ K8s 等價 ↓
+#   StatefulSet 自動幫你做到：固定名稱 + 獨立 PVC + 有序啟動
+#
+# Deployment vs StatefulSet：
+#   | 特性           | Deployment        | StatefulSet        |
+#   |----------------|-------------------|--------------------|
+#   | Pod 名稱       | random (abc-xyz)  | 固定 (mysql-0, 1)  |
+#   | 啟動順序       | 同時啟動          | 依序 (0→1→2)       |
+#   | PVC            | 所有 Pod 共用     | 每個 Pod 獨立      |
+#   | 刪除順序       | 隨機刪除          | 反序 (2→1→0)       |
+#   | 適合           | 無狀態 (API/Web)  | 有狀態 (DB/Cache)  |
+
+---
+# --- Headless Service（StatefulSet 必須搭配）---
+# headless = clusterIP: None
+# 不提供負載均衡，而是讓每個 Pod 有自己的 DNS 記錄：
+#   mysql-0.mysql-headless.default.svc.cluster.local
+#   mysql-1.mysql-headless.default.svc.cluster.local
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless
+  labels:
+    app: mysql-sts
+spec:
+  clusterIP: None                  # 關鍵！這就是 Headless Service
+  selector:
+    app: mysql-sts
+  ports:
+    - port: 3306
+      targetPort: 3306
+
+---
+# --- Secret（MySQL 密碼）---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-sts-secret
+type: Opaque
+stringData:                        # 用 stringData 直接寫明文
+  MYSQL_ROOT_PASSWORD: "rootpass123"
+
+---
+# --- StatefulSet ---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: mysql-headless      # 對應上面的 Headless Service
+  replicas: 2                      # 建立 mysql-0 和 mysql-1
+  selector:
+    matchLabels:
+      app: mysql-sts
+  template:
+    metadata:
+      labels:
+        app: mysql-sts
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - secretRef:
+                name: mysql-sts-secret
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+
+  # volumeClaimTemplates：每個 Pod 自動建立獨立的 PVC
+  # mysql-0 → PVC: mysql-data-mysql-0
+  # mysql-1 → PVC: mysql-data-mysql-1
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        # 如果有 StorageClass，指定名稱；留空用 default
+        # storageClassName: local-path

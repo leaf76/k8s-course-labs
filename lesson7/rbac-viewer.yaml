@@ -1,0 +1,41 @@
+# rbac-viewer.yaml
+# 只讀 Role + RoleBinding
+# 第七堂 Lab：RBAC
+---
+# 1. 建立 ServiceAccount（代表一個「使用者」身份）
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: viewer-sa
+  namespace: default
+---
+# 2. Role：定義「能做什麼」
+#    這個 Role 只能 get / list / watch，不能 create / update / delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-viewer
+  namespace: default
+rules:
+  - apiGroups: [""]                     # "" 代表 core API group（Pod、Service 等）
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]     # 只能看，不能改
+  - apiGroups: ["apps"]                 # Deployment、ReplicaSet 等
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+# 3. RoleBinding：把 Role 綁定到 ServiceAccount
+#    「viewer-sa 這個帳號，可以使用 pod-viewer 這個 Role 的權限」
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: viewer-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: viewer-sa                     # 綁定到哪個 ServiceAccount
+    namespace: default
+roleRef:
+  kind: Role
+  name: pod-viewer                      # 綁定哪個 Role
+  apiGroup: rbac.authorization.k8s.io

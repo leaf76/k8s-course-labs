@@ -1,0 +1,20 @@
+# ============================================
+# NodePort Service — 外部存取
+# 用途：讓叢集外部可以透過 Node IP + Port 存取服務
+# 對照 Docker：docker run -p 30080:80 nginx
+# ============================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+  labels:
+    app: nginx
+spec:
+  type: NodePort
+  selector:
+    app: nginx                   # 選擇 label 為 app=nginx 的 Pod
+  ports:
+    - port: 80                   # Service 監聽的 port（叢集內部用）
+      targetPort: 80             # 轉發到 Pod 的 port
+      nodePort: 30080            # Node 上開的 port（範圍 30000-32767）
+      protocol: TCP

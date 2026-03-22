@@ -1,0 +1,45 @@
+# daemonset.yaml
+# DaemonSet 範例：每個 Node 跑一個日誌收集器
+# 第七堂 Lab：DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+  labels:
+    app: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+        - name: logger
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Log collector started on $(hostname)"
+              while true; do
+                echo "[$(date)] Collecting logs from $(hostname)..."
+                sleep 30
+              done
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+      # tolerations 讓 DaemonSet 也能跑在 master 節點上（k3s 預設有 taint）
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule

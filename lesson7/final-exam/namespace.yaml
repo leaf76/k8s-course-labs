@@ -1,0 +1,8 @@
+# namespace.yaml
+# 總複習實戰 Step 1：建立 prod Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    env: production

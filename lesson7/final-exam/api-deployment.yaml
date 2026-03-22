@@ -1,0 +1,71 @@
+# api-deployment.yaml
+# 總複習實戰 Step 5：部署 API（Deployment + Probe + Resource limits）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deploy
+  namespace: prod
+  labels:
+    app: api
+    role: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+      role: api
+  template:
+    metadata:
+      labels:
+        app: api
+        role: api
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27             # 用 nginx 模擬 API（實際專案換成你的 API image）
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: DB_PORT
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: MYSQL_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 10        # 啟動最多等 50 秒

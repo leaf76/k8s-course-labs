@@ -1,0 +1,37 @@
+# configmap.yaml
+# 總複習實戰 Step 3：用 ConfigMap 存 API 設定
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: prod
+data:
+  DB_HOST: "mysql-0.mysql-headless.prod.svc.cluster.local"
+  DB_PORT: "3306"
+  DB_NAME: "myapp"
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+---
+# 前端的 nginx 設定
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+  namespace: prod
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+
+        location /api/ {
+            proxy_pass http://api-svc:8080/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }

@@ -1,0 +1,40 @@
+# deployment-probe.yaml
+# 帶健康檢查的 Deployment
+# 第七堂 Lab：Health Check / Probe
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-probe-demo
+  labels:
+    app: api-probe-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-probe-demo
+  template:
+    metadata:
+      labels:
+        app: api-probe-demo
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          # livenessProbe：活著嗎？失敗就重啟容器
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5      # 啟動後等 5 秒才開始檢查
+            periodSeconds: 10            # 每 10 秒檢查一次
+            failureThreshold: 3          # 連續失敗 3 次才判定不健康
+          # readinessProbe：準備好了嗎？沒好就不轉流量
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3       # 啟動後等 3 秒才開始檢查
+            periodSeconds: 5             # 每 5 秒檢查一次
+            failureThreshold: 2          # 連續失敗 2 次就從 Service 移除

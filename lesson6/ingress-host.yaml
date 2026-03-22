@@ -1,0 +1,42 @@
+# Lab 6-2: Host-based Routing Ingress
+# 功能：根據域名（Host header），將流量導向不同的 Service
+#   app.example.com  → frontend-svc
+#   api.example.com  → api-svc
+#
+# Docker 對照：就像 Nginx 的 server_name 配置
+#   server { server_name app.example.com; proxy_pass http://frontend:80; }
+#   server { server_name api.example.com; proxy_pass http://api:3000; }
+#
+# 注意：本地測試需要修改 /etc/hosts 來模擬域名解析
+#   echo "<minikube-ip> app.example.com api.example.com" >> /etc/hosts
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: host-ingress
+spec:
+  ingressClassName: nginx       # k3s 改成 traefik
+  rules:
+    # 規則 1：app.example.com → 前端
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
+
+    # 規則 2：api.example.com → API
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-svc
+                port:
+                  number: 3000

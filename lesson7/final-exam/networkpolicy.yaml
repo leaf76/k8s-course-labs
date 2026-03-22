@@ -1,0 +1,73 @@
+# networkpolicy.yaml
+# 總複習實戰 Step 9：設定 NetworkPolicy
+---
+# 規則 1：DB 只接受 API 的連線
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: mysql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: api
+      ports:
+        - protocol: TCP
+          port: 3306
+---
+# 規則 2：API 只接受前端和 Ingress 的連線
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-policy
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      role: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
+    # 也允許 Ingress Controller 的流量
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# 規則 3：前端只接受 Ingress Controller 的連線
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      role: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80

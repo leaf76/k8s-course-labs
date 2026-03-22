@@ -1,0 +1,21 @@
+# hpa.yaml
+# HPA（Horizontal Pod Autoscaler）設定
+# 第七堂 Lab：Resource 管理 + HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-resources-demo            # 要自動擴縮的 Deployment
+  minReplicas: 2                        # 最少 2 個 Pod
+  maxReplicas: 8                        # 最多 8 個 Pod
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50        # CPU 超過 50% 就擴容

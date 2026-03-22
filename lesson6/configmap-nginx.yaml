@@ -1,0 +1,95 @@
+# Lab 6-4: ConfigMap 掛載為檔案（Nginx 設定檔）
+# 功能：用 ConfigMap 存放 Nginx 設定檔，掛載到 Pod 的檔案系統
+#
+# Docker 對照：
+#   docker run -v ./nginx.conf:/etc/nginx/conf.d/default.conf nginx
+#   ↓ K8s 等價 ↓
+#   用 ConfigMap 當 Volume 掛載
+#
+# 重點：Volume 掛載的 ConfigMap 支援「熱更新」
+#   修改 ConfigMap 後，Pod 裡的檔案會自動更新（約 30-60 秒）
+#   ⚠️ 但如果用 subPath 掛載，就不會自動更新！這是常見的坑
+
+---
+# --- ConfigMap：存放 Nginx 設定檔的內容 ---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  # key 就是檔案名稱，value 就是檔案內容
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+
+        # 首頁
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+
+        # 反向代理到 API（示範用）
+        location /api/ {
+            proxy_pass http://api-svc:3000/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # 健康檢查端點
+        location /healthz {
+            return 200 'OK';
+            add_header Content-Type text/plain;
+        }
+    }
+
+---
+# --- Deployment：把 ConfigMap 掛載為檔案 ---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-custom
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-custom
+  template:
+    metadata:
+      labels:
+        app: nginx-custom
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          # 把 Volume 掛載到容器裡的指定路徑
+          volumeMounts:
+            - name: nginx-conf-volume
+              mountPath: /etc/nginx/conf.d   # 整個目錄會被覆蓋
+              # ⚠️ 如果只想掛一個檔案不覆蓋整個目錄：
+              # mountPath: /etc/nginx/conf.d/default.conf
+              # subPath: default.conf
+              # 但 subPath 不支援熱更新！
+
+      # 定義 Volume，來源是 ConfigMap
+      volumes:
+        - name: nginx-conf-volume
+          configMap:
+            name: nginx-config               # 指向上面的 ConfigMap
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-custom-svc
+spec:
+  selector:
+    app: nginx-custom
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

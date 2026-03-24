@@ -1,0 +1,17 @@
+# Lab 6：MySQL Pod（正確版，有設密碼）
+# 注意：密碼直接寫在 YAML 裡不安全，第六堂會學 Secret
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-pod
+  labels:
+    app: mysql
+spec:
+  containers:
+    - name: mysql
+      image: mysql:8.0
+      ports:
+        - containerPort: 3306
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "my-secret"

@@ -1,0 +1,16 @@
+# Lab 6：MySQL Pod（故意不設密碼）
+# 直接 apply 會 CrashLoopBackOff
+# 用 kubectl logs 看到 "database is uninitialized and password option is not specified"
+# 這就是為什麼需要環境變數
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-pod
+  labels:
+    app: mysql
+spec:
+  containers:
+    - name: mysql
+      image: mysql:8.0
+      ports:
+        - containerPort: 3306

@@ -1,0 +1,23 @@
+# Lab 7：Deployment 初體驗
+# 建立 3 個 nginx Pod 副本
+# 試試 kubectl delete pod <pod-name>，看它自動補回來
+# 對比直接建 Pod：Pod 刪了就沒了，Deployment 刪了會自動補
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80

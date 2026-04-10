@@ -1,4 +1,4 @@
-# lesson5/daemonset-correct.yaml — Lab 7：正確的 DaemonSet 版本 log-collector
+# 5-15 Lab 7：正確的 DaemonSet 版本 log-collector
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

@@ -1,4 +1,4 @@
-# lesson5/nodeport.yaml — 綜合實作：fullstack-demo namespace 的 NodePort Service
+# 5-17 綜合實作：fullstack-demo 的 NodePort Service
 apiVersion: v1
 kind: Service
 metadata:

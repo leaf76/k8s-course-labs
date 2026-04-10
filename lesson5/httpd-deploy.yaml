@@ -1,4 +1,4 @@
-# lesson5/httpd-deploy.yaml — httpd Deployment（Loop 4 學員實作）
+# 5-12 學員實作：httpd Deployment（replicas: 2）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

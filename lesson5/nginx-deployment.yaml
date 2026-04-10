@@ -1,7 +1,4 @@
-# ============================================
-# 基本 Deployment — nginx 3 副本
-# 用途：Loop 2 Deployment 擴縮容實作
-# ============================================
+# 5-4 擴縮容實作：nginx Deployment（3 副本）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

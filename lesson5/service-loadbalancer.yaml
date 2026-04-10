@@ -1,4 +1,4 @@
-# lesson5/service-loadbalancer.yaml — LoadBalancer Service（觀察 EXTERNAL-IP pending）
+# 5-13 LoadBalancer Service（觀察 EXTERNAL-IP pending）
 apiVersion: v1
 kind: Service
 metadata:

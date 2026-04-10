@@ -1,4 +1,4 @@
-# lesson5/lab5-buggy.yaml — Lab 5：兩個 Bug（type 設錯 + targetPort 不一致）
+# 5-13 Lab 5：兩個 Bug（type 設錯 + targetPort 不一致）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

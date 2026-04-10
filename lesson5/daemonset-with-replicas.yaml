@@ -1,8 +1,4 @@
-# ============================================
-# DaemonSet 陷阱題 — 故意保留 replicas 欄位
-# 用途：常見坑 Q2 — apply 會報錯，因為 DaemonSet 不支援 replicas
-# 教學重點：DaemonSet 的 Pod 數量由 Node 數量決定，不是 replicas
-# ============================================
+# 5-15 常見坑：DaemonSet 加 replicas 會報錯
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

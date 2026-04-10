@@ -1,7 +1,4 @@
-# ============================================
-# Namespace 練習
-# 用途：Loop 6 Namespace 實作
-# ============================================
+# 5-14 Namespace 練習（dev + staging）
 apiVersion: v1
 kind: Namespace
 metadata:

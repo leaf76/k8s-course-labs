@@ -1,7 +1,4 @@
-# ============================================
-# 綜合實作：fullstack-demo
-# 用途：Loop 8 綜合實作
-# ============================================
+# 5-17 綜合實作：fullstack-demo 完整架構
 apiVersion: v1
 kind: Namespace
 metadata:

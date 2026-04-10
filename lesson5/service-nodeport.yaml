@@ -1,7 +1,4 @@
-# ============================================
-# NodePort Service — 外部存取
-# 用途：Loop 6 NodePort 實作
-# ============================================
+# 5-13 NodePort Service 實作
 apiVersion: v1
 kind: Service
 metadata:

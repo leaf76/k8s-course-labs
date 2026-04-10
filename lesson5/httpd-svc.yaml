@@ -1,4 +1,4 @@
-# lesson5/httpd-svc.yaml — httpd ClusterIP Service（Loop 4 學員實作）
+# 5-12 學員實作：httpd ClusterIP Service
 apiVersion: v1
 kind: Service
 metadata:

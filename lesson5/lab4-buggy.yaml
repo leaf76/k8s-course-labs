@@ -1,4 +1,4 @@
-# lesson5/lab4-buggy.yaml — Lab 4：Service selector 和 Pod label 不一致（找 Bug 並修復）
+# 5-12 Lab 4：Service selector 和 Pod label 不一致（找 Bug 並修復）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

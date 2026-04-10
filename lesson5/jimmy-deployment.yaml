@@ -1,4 +1,4 @@
-# lesson5/jimmy-deployment.yaml — Lab 7：Jimmy 用 Deployment 部署 log-collector（有問題，應改成 DaemonSet）
+# 5-15 Lab 7：Jimmy 用 Deployment 部署 log-collector（應改成 DaemonSet）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

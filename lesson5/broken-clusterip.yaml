@@ -1,4 +1,4 @@
-# lesson5/broken-clusterip.yaml — selector 故意打錯的 ClusterIP Service（排錯練習）
+# 5-12 排錯練習：selector 故意打錯的 ClusterIP Service
 apiVersion: v1
 kind: Service
 metadata:

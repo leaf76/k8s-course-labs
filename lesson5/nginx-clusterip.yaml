@@ -1,4 +1,4 @@
-# lesson5/nginx-clusterip.yaml — Lab 8：ClusterIP Service for nginx-web
+# 5-17 Lab 8：ClusterIP Service for nginx-web
 apiVersion: v1
 kind: Service
 metadata:

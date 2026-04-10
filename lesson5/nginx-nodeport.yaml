@@ -1,4 +1,4 @@
-# lesson5/lab8-nginx-nodeport.yaml — Lab 8：NodePort Service for nginx-web（port 30088）
+# lesson5/nginx-nodeport.yaml — Lab 8：NodePort Service for nginx-web（port 30088）
 apiVersion: v1
 kind: Service
 metadata:

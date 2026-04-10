@@ -1,4 +1,4 @@
-# lesson5/lab8-health-check-cronjob.yaml — Lab 8：CronJob 每分鐘 curl nginx-svc 做 health check
+# lesson5/health-check-cronjob.yaml — Lab 8：CronJob 每分鐘 curl nginx-svc 做 health check
 apiVersion: batch/v1
 kind: CronJob
 metadata:

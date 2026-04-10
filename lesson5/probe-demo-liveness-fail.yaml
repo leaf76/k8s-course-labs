@@ -1,0 +1,26 @@
+# Bonus-2 Probe 實驗：liveness 故意失敗（exec exit 1 → 永遠失敗 → 不斷重啟）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: probe-demo
+  template:
+    metadata:
+      labels:
+        app: probe-demo
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "exit 1"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3

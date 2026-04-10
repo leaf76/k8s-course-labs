@@ -1,0 +1,14 @@
+# Bonus-1 OOM Kill 實驗：記憶體 limits 64Mi，實際用 128M → OOM Kill
+apiVersion: v1
+kind: Pod
+metadata:
+  name: oom-test
+spec:
+  containers:
+    - name: stress
+      image: polinux/stress
+      resources:
+        limits:
+          memory: "64Mi"
+      command: ["stress"]
+      args: ["--vm", "1", "--vm-bytes", "128M", "--vm-hang", "1"]

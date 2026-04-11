@@ -1,0 +1,33 @@
+# Loop 4 必做題目：故障診斷
+# 這個 YAML 有三個錯誤，找出來並修好
+# 目標：讓 PostgreSQL 正常啟動並持久化資料
+#
+# 提示：看 kubectl get pvc 的 STATUS 是否為 Bound
+#       如果不是 Bound，kubectl describe pvc <name> 看 Events
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pg-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany        # 錯誤一：hostPath 不支援這個模式
+  storageClassName: fast   # 錯誤二：跟 PVC 的 storageClassName 不一致
+  hostPath:
+    path: /data/pg
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pg-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual # 錯誤三：跟 PV 的 storageClassName 不一致
+  resources:
+    requests:
+      storage: 2Gi         # 額外問題：超過 PV 的容量（1Gi < 2Gi）

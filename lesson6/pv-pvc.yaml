@@ -25,7 +25,7 @@ metadata:
     type: local
 spec:
   capacity:
-    storage: 1Gi                   # 這個 PV 有 1GB
+    storage: 2Gi                   # 這個 PV 有 2GB（PVC 只申請 1Gi，故意讓兩個數字不同，方便講解）
   accessModes:
     - ReadWriteOnce                # RWO：同時只能被一個 Node 掛載
     # 其他選項：

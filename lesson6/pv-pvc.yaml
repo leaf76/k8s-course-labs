@@ -31,6 +31,14 @@ spec:
   hostPath:
     path: /tmp/k8s-pv-data              # 學習用：直接用 Node 本機路徑
     type: DirectoryOrCreate             # 目錄不存在就自動建立
+  nodeAffinity:                         # 多 Node 環境：固定到 master，避免 hostPath 跨 Node
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - ubuntu-master
 
 ---
 # --- Step 2: PersistentVolumeClaim（使用者申請）---

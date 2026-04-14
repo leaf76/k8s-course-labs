@@ -1,0 +1,55 @@
+# 6-7 學員實作用
+# 前提：學員已自己用 kubectl create 建好 app-config（ConfigMap）和 app-secret（Secret）
+# 這份 YAML 只有 Deployment + Service，不含 ConfigMap / Secret
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deploy
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: app
+          image: yanchen184/k8s-demo-app:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: app-config    # 學員自己建的 ConfigMap
+            - secretRef:
+                name: app-secret    # 學員自己建的 Secret
+          volumeMounts:
+            - name: app-cfg
+              mountPath: /etc/app
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: app-cfg
+          configMap:
+            name: app-config
+            items:
+              - key: config.txt
+                path: config.txt
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

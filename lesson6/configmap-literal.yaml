@@ -2,54 +2,64 @@
 # 功能：把應用的設定抽出來，不要寫死在 Image 裡
 #
 # Docker 對照：
-#   docker run -e APP_ENV=production -e LOG_LEVEL=info myapp
+#   docker run -e USERNAME=admin -e MESSAGE=HelloWorld jasonmel/k8s-demo-app
 #   ↓ K8s 等價 ↓
 #   用 ConfigMap 集中管理，再注入到 Pod
+#
+# 驗證（curl 直接看到 ConfigMap 的值）：
+#   curl http://<NODE-IP>/frontend
+#   → Server: 10.42.x.x:80
+#   → Message: Hello from ConfigMap
+#   → Username: admin           ← 來自 ConfigMap
+#   → Password: （未設定）
 
 ---
-# --- ConfigMap：集中存放設定 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
 data:
-  # key: value 格式，跟環境變數一樣
-  APP_ENV: "production"
-  LOG_LEVEL: "info"
-  API_URL: "http://api-svc:3000"
-  MAX_CONNECTIONS: "100"
+  MESSAGE: "Hello from ConfigMap"
+  USERNAME: "admin"
 
 ---
-# --- Deployment：把 ConfigMap 注入為環境變數 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-with-config
+  name: frontend-deploy
+  labels:
+    app: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: app-with-config
+      app: frontend
   template:
     metadata:
       labels:
-        app: app-with-config
+        app: frontend
     spec:
       containers:
         - name: app
-          image: busybox:1.36
-          command: ["sh", "-c", "env | sort && sleep 3600"]
-          # 方法 1：逐一指定要注入哪些 key
-          env:
-            - name: APP_ENV                  # Pod 裡的環境變數名稱
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config           # 哪個 ConfigMap
-                  key: APP_ENV               # ConfigMap 裡的哪個 key
-
-          # 方法 2：一次全部注入（更方便）
+          image: jasonmel/k8s-demo-app:latest
           envFrom:
             - configMapRef:
-                name: app-config             # 把 app-config 的所有 key 都變成環境變數
+                name: app-config    # 把 ConfigMap 所有 key 注入為環境變數
+          env:
+            - name: PASSWORD
+              value: "（未設定）"   # Secret 那張才會真正注入
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

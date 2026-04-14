@@ -1,24 +1,29 @@
 # Lab 6-2: Host-based Routing Ingress
 # 功能：根據域名（Host header），將流量導向不同的 Service
-#   app.example.com  → frontend-svc
-#   api.example.com  → api-svc
+#   www.myapp.local  → frontend-svc
+#   api.myapp.local  → api-svc
 #
 # Docker 對照：就像 Nginx 的 server_name 配置
-#   server { server_name app.example.com; proxy_pass http://frontend:80; }
-#   server { server_name api.example.com; proxy_pass http://api:3000; }
+#   server { server_name www.myapp.local; proxy_pass http://frontend:80; }
+#   server { server_name api.myapp.local; proxy_pass http://api:80; }
 #
-# 注意：本地測試需要修改 /etc/hosts 來模擬域名解析
-#   echo "<minikube-ip> app.example.com api.example.com" >> /etc/hosts
+# 前置條件：已 apply ingress-basic.yaml（frontend-svc, api-svc 已存在）
+#
+# 設定 /etc/hosts（⚠ 用 >> 追加，不能用 > 覆蓋）：
+#   sudo sh -c 'echo "<NODE-IP> www.myapp.local api.myapp.local" >> /etc/hosts'
+#
+# 驗證：
+#   curl http://www.myapp.local → Message: Hello from frontend
+#   curl http://api.myapp.local → Message: Hello from api
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: host-ingress
+  name: app-ingress
 spec:
-  ingressClassName: nginx       # k3s 改成 traefik
+  ingressClassName: traefik    # k3s 用 traefik；nginx-ingress 改成 nginx
   rules:
-    # 規則 1：app.example.com → 前端
-    - host: app.example.com
+    - host: www.myapp.local
       http:
         paths:
           - path: /
@@ -29,8 +34,7 @@ spec:
                 port:
                   number: 80
 
-    # 規則 2：api.example.com → API
-    - host: api.example.com
+    - host: api.myapp.local
       http:
         paths:
           - path: /
@@ -39,4 +43,4 @@ spec:
               service:
                 name: api-svc
                 port:
-                  number: 3000
+                  number: 80

@@ -1,19 +1,22 @@
 # Lab 6-1: 基本 Ingress（Path-based Routing）
 # 功能：根據 URL 路徑，將流量導向不同的 Service
-#   /        → frontend-svc（前端）
-#   /api     → api-svc（後端 API）
+#   /frontend  → frontend-svc
+#   /api       → api-svc
 #
 # 前置條件：
-#   1. 已安裝 Ingress Controller（k3s 內建 Traefik，或用 nginx-ingress）
-#   2. 已建立 frontend-svc 和 api-svc 兩個 ClusterIP Service
+#   1. 已安裝 Ingress Controller（k3s 內建 Traefik）
+#   2. kubectl get pods -n kube-system | grep traefik  → Running
 #
 # Docker 對照：這就像 Nginx 反向代理的 location block
-#   location / { proxy_pass http://frontend:80; }
-#   location /api { proxy_pass http://api:3000; }
+#   location /frontend { proxy_pass http://frontend:80; }
+#   location /api      { proxy_pass http://api:80; }
+#
+# 驗證：
+#   curl http://<NODE-IP>/frontend → 印出 Server IP + Message: Hello from frontend
+#   curl http://<NODE-IP>/api      → 印出 Server IP + Message: Hello from api
+#   兩個 Server IP 不同 → 確認是不同 Pod 在服務
 
 ---
-# --- 先建立測試用的 Deployment 和 Service ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,8 +34,15 @@ spec:
         app: frontend
     spec:
       containers:
-        - name: nginx
-          image: nginx:1.27
+        - name: app
+          image: jasonmel/k8s-demo-app:latest
+          env:
+            - name: MESSAGE
+              value: "Hello from frontend"
+            - name: USERNAME
+              value: "guest"
+            - name: PASSWORD
+              value: "（未設定）"
           ports:
             - containerPort: 80
 
@@ -47,7 +57,7 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-  type: ClusterIP            # Ingress 後面接 ClusterIP 就夠了
+  type: ClusterIP
 
 ---
 apiVersion: apps/v1
@@ -67,13 +77,17 @@ spec:
         app: api
     spec:
       containers:
-        - name: api
-          image: hashicorp/http-echo:latest
-          args:
-            - "-text=Hello from API"    # 回傳固定文字，方便驗證
-            - "-listen=:3000"
+        - name: app
+          image: jasonmel/k8s-demo-app:latest
+          env:
+            - name: MESSAGE
+              value: "Hello from api"
+            - name: USERNAME
+              value: "guest"
+            - name: PASSWORD
+              value: "（未設定）"
           ports:
-            - containerPort: 3000
+            - containerPort: 80
 
 ---
 apiVersion: v1
@@ -84,38 +98,31 @@ spec:
   selector:
     app: api
   ports:
-    - port: 3000
-      targetPort: 3000
+    - port: 80
+      targetPort: 80
   type: ClusterIP
 
 ---
-# --- Ingress 規則（重點在這裡）---
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  annotations:
-    # nginx-ingress 用這個；k3s Traefik 不需要
-    # nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx       # k3s 改成 traefik
+  ingressClassName: traefik    # k3s 用 traefik；nginx-ingress 改成 nginx
   rules:
     - http:
         paths:
-          # 前端：所有 / 開頭的請求
-          - path: /
+          - path: /frontend
             pathType: Prefix
             backend:
               service:
                 name: frontend-svc
                 port:
                   number: 80
-          # API：所有 /api 開頭的請求
           - path: /api
             pathType: Prefix
             backend:
               service:
                 name: api-svc
                 port:
-                  number: 3000
+                  number: 80

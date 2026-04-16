@@ -9,17 +9,20 @@
 #
 # 前置條件：已 apply ingress-basic.yaml（frontend-svc, api-svc 已存在）
 #
+# ⚠ 注意：這份 YAML 的 Ingress 名稱是 app-ingress-host（不是 app-ingress）
+#   故意和 ingress-basic.yaml 用不同名稱，避免 apply 後覆蓋 path-based 路由規則
+#
 # 設定 /etc/hosts（⚠ 用 >> 追加，不能用 > 覆蓋）：
 #   sudo sh -c 'echo "<NODE-IP> www.myapp.local api.myapp.local" >> /etc/hosts'
 #
-# 驗證：
-#   curl http://www.myapp.local → Message: Hello from frontend
-#   curl http://api.myapp.local → Message: Hello from api
+# 驗證（host-based 路由的 path 是 /，直接用域名根路徑）：
+#   curl http://www.myapp.local    → Message: Hello from frontend
+#   curl http://api.myapp.local    → Message: Hello from api
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-ingress
+  name: app-ingress-host
 spec:
   ingressClassName: traefik    # k3s 用 traefik；nginx-ingress 改成 nginx
   rules:

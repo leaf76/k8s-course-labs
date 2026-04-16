@@ -24,7 +24,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -68,7 +68,7 @@ metadata:
   labels:
     app: api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -126,12 +126,5 @@ spec:
             backend:
               service:
                 name: api-svc
-                port:
-                  number: 80
-          - path: /config
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend-svc
                 port:
                   number: 80

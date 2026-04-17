@@ -1,0 +1,41 @@
+# nginx-resource-demo.yaml
+# nginx Deployment + Service，給 HPA 壓測示範用
+# 必須設 resources.requests，HPA 才能算 CPU 百分比
+# 第七堂 Lab：HPA 水平自動擴展示範用
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-resource-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-resource
+  template:
+    metadata:
+      labels:
+        app: nginx-resource
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-resource-svc
+spec:
+  selector:
+    app: nginx-resource
+  ports:
+    - port: 80
+      targetPort: 80

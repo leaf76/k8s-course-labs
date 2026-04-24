@@ -14,9 +14,14 @@ secret:
 
 postgres:
   image: postgres:15
+  imagePullPolicy: IfNotPresent
   database: shortlinks
   user: postgres
   storageSize: 1Gi
+
+busybox:
+  image: busybox:1.36
+  imagePullPolicy: IfNotPresent
 
 ingress:
   enabled: true

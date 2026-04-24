@@ -38,7 +38,7 @@ Ingress short.local
 | `api/` | Express API source code, migration, and Dockerfile |
 | `frontend/` | Static frontend source code and Dockerfile |
 | `k8s/` | Public-image Kubernetes YAML fallback |
-| `k8s-local/` | Local-image YAML for API, frontend, and migration Job |
+| `k8s-local/` | Local-image YAML for PostgreSQL, API, frontend, and migration Job |
 | `helm/url-shortener/` | Helm chart for one-command install and upgrade |
 | `scripts/` | Student scripts for build/save/load/check local images |
 | `local-smoke-test.sh` | Instructor-only Docker smoke test for local verification |
@@ -54,6 +54,17 @@ cloud download -> k3s ctr images import -> kubectl apply / helm install
 Important: Docker and k3s do not necessarily use the same image store. Downloading the tar is not enough; k3s runs Pods from the containerd image store inside each Linux node. Import the tar into both the control plane and worker nodes before applying YAML.
 
 Rule of thumb: if a Pod is scheduled to a node, that node must already have the image. With `imagePullPolicy: Never`, k3s will not pull from Docker Hub as a backup.
+
+For the local-image workflow, use the YAML files in `k8s-local/` for every workload that runs an image from the tar:
+
+| YAML | Image behavior |
+|---|---|
+| `k8s-local/03-postgres.yaml` | Uses `postgres:15` with `imagePullPolicy: Never` |
+| `k8s-local/04-migrate-job.yaml` | Uses `busybox:1.36` and `url-shortener-api:lab` with `imagePullPolicy: Never` |
+| `k8s-local/05-api.yaml` | Uses `url-shortener-api:lab` with `imagePullPolicy: Never` |
+| `k8s-local/06-frontend.yaml` | Uses `url-shortener-frontend:lab` with `imagePullPolicy: Never` |
+
+The image names stay the same as the imported tar. `postgres:15` still means the local `postgres:15` image inside each k3s node's containerd image store. The important difference is `imagePullPolicy: Never`: if the image was not imported to that node, the Pod fails immediately instead of trying Docker Hub.
 
 ### Default: instructor-provided image tar
 
@@ -156,7 +167,7 @@ Run from this directory:
 kubectl apply -f k8s/00-namespace.yaml
 kubectl apply -f k8s/01-secret.yaml
 kubectl apply -f k8s/02-configmap.yaml
-kubectl apply -f k8s/03-postgres.yaml
+kubectl apply -f k8s-local/03-postgres.yaml
 kubectl apply -f k8s-local/04-migrate-job.yaml
 kubectl apply -f k8s-local/05-api.yaml
 kubectl apply -f k8s-local/06-frontend.yaml

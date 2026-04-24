@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: {{ .Release.Namespace }}
+  namespace: url-shortener
 spec:
   selector:
     app: postgres
@@ -15,7 +15,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: {{ .Release.Namespace }}
+  namespace: url-shortener
 spec:
   serviceName: postgres-service
   replicas: 1
@@ -29,8 +29,8 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: {{ .Values.postgres.image | quote }}
-          imagePullPolicy: {{ .Values.postgres.imagePullPolicy }}
+          image: postgres:15
+          imagePullPolicy: Never
           ports:
             - containerPort: 5432
           env:
@@ -54,7 +54,7 @@ spec:
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", {{ .Values.postgres.user | quote }}]
+              command: ["pg_isready", "-U", "postgres"]
             initialDelaySeconds: 5
             periodSeconds: 5
   volumeClaimTemplates:
@@ -64,4 +64,4 @@ spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: {{ .Values.postgres.storageSize | quote }}
+            storage: 1Gi

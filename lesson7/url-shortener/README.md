@@ -53,6 +53,8 @@ source code -> docker build -> docker save -> k3s ctr images import -> kubectl a
 
 Important: Docker and k3s do not necessarily use the same image store. `docker build` creates images in Docker, but k3s runs Pods from the containerd image store inside each Linux node. Import the images into both the control plane and worker nodes before applying YAML.
 
+Rule of thumb: if a Pod is scheduled to a node, that node must already have the image. With `imagePullPolicy: Never`, k3s will not pull from Docker Hub as a backup.
+
 ### Default: local images
 
 Run from this directory:
